@@ -296,7 +296,12 @@ function PreviewCard({
     <View style={previewStyles.inner}>
       {iconId && (
         <View style={previewStyles.iconWrap}>
-          <Text style={previewStyles.iconEmoji}>{iconId}</Text>
+          <Text
+            style={iconId.length > 2 ? previewStyles.iconKaomoji : previewStyles.iconEmoji}
+            numberOfLines={iconId.length > 2 ? 2 : 1}
+          >
+            {iconId}
+          </Text>
         </View>
       )}
       <View style={previewStyles.row}>
@@ -351,6 +356,7 @@ const previewStyles = StyleSheet.create({
   inner: { paddingHorizontal: 20, paddingVertical: 18 },
   iconWrap: { marginBottom: 8 },
   iconEmoji: { fontSize: 36, lineHeight: 42 },
+  iconKaomoji: { fontSize: 13, lineHeight: 18, textAlign: 'center' },
   row: { flexDirection: 'row', alignItems: 'center' },
   left: { flex: 1, marginRight: 16 },
   title: { fontSize: 17, fontWeight: '700', marginBottom: 4 },

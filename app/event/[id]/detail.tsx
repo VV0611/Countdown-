@@ -400,7 +400,7 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   heroIcon: { fontSize: 38, lineHeight: 44 },
-  heroIconKaomoji: { fontSize: 16, lineHeight: 22, textAlign: 'center' },
+  heroIconKaomoji: { fontSize: 16, lineHeight: 22, textAlign: 'center', color: '#fff' },
   heroTitle: {
     fontSize: 20,
     fontWeight: '800',

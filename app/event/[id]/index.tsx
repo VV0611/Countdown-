@@ -36,7 +36,11 @@ export default function EventSimpleScreen() {
   const bg = parseBg(event.coverImage);
   const color = event.themeColor;
 
-  const heroLabel = isToday ? '就是今天' : isPast ? '在一起已经' : '还有';
+  const heroLabel = isToday
+    ? '就是今天'
+    : isPast
+    ? event.type === 'countup' ? '在一起已经' : '已过去'
+    : '还有';
 
   const handleShare = async () => {
     if (Platform.OS === 'web') {
@@ -193,6 +197,13 @@ export default function EventSimpleScreen() {
         </View>
       </View>
 
+      {/* ShareCard rendered outside Modal so cardRef is always mounted */}
+      <View style={styles.hiddenCard} pointerEvents="none">
+        <View ref={cardRef} collapsable={false}>
+          <ShareCard event={event} />
+        </View>
+      </View>
+
       <Modal
         visible={shareVisible}
         transparent
@@ -202,9 +213,7 @@ export default function EventSimpleScreen() {
         <View style={styles.modalBackdrop}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>分享卡片</Text>
-            <View ref={cardRef} collapsable={false}>
-              <ShareCard event={event} />
-            </View>
+            <ShareCard event={event} />
             <View style={styles.modalActions}>
               <TouchableOpacity style={styles.cancelBtn} onPress={() => setShareVisible(false)}>
                 <Text style={styles.cancelText}>取消</Text>
@@ -233,6 +242,7 @@ export default function EventSimpleScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
+  hiddenCard: { position: 'absolute', opacity: 0, left: -9999 },
   notFound: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   notFoundText: { color: '#9CA3AF', fontSize: 15 },
   headerBtn: { marginRight: 4 },
