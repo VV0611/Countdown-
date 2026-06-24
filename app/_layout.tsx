@@ -1,15 +1,45 @@
 import { Stack } from 'expo-router';
+import { useEffect } from 'react';
+import { Platform } from 'react-native';
+import * as Notifications from 'expo-notifications';
+import { ThemeProvider, useTheme } from '../src/theme/ThemeContext';
 
-export default function RootLayout() {
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
+
+function AppStack() {
+  const { colors } = useTheme();
+
+  useEffect(() => {
+    if (Platform.OS !== 'web') {
+      Notifications.requestPermissionsAsync();
+    }
+  }, []);
+
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: '#fff' },
+        headerStyle: { backgroundColor: colors.header },
         headerShadowVisible: false,
-        headerTintColor: '#111827',
+        headerTintColor: colors.text,
         headerTitleStyle: { fontWeight: '700', fontSize: 18 },
-        contentStyle: { backgroundColor: '#F5F6FA' },
+        contentStyle: { backgroundColor: colors.background },
       }}
     />
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <ThemeProvider>
+      <AppStack />
+    </ThemeProvider>
   );
 }

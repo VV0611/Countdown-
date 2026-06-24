@@ -3,6 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { CountdownEvent } from '../types';
 import { formatDisplayDate, daysFromToday } from '../utils/dateUtils';
 import { useCategoryStore } from '../store/categoryStore';
+import { useTheme } from '../theme/ThemeContext';
 
 interface Props {
   event: CountdownEvent;
@@ -19,6 +20,7 @@ export default function EventCard({ event, onPress, onPinPress, onDelete, onLong
   const color = event.themeColor;
 
   const { categories } = useCategoryStore();
+  const { colors } = useTheme();
   const category = event.categoryId ? categories.find((c) => c.id === event.categoryId) : undefined;
 
   const unitLabel = isToday
@@ -28,7 +30,7 @@ export default function EventCard({ event, onPress, onPinPress, onDelete, onLong
     : diff < 0 ? '天' : '天后';
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: colors.surface }]}>
       {/* Accent bar */}
       <View style={[styles.accentBar, { backgroundColor: color }]} />
 
@@ -54,9 +56,9 @@ export default function EventCard({ event, onPress, onPinPress, onDelete, onLong
         </View>
 
         <View style={styles.middle}>
-          <Text style={styles.title} numberOfLines={1}>{event.title}</Text>
+          <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>{event.title}</Text>
           <View style={styles.subRow}>
-            <Text style={styles.date}>{formatDisplayDate(event.targetDate)}</Text>
+            <Text style={[styles.date, { color: colors.textMuted }]}>{formatDisplayDate(event.targetDate)}</Text>
             {category && (
               <View style={[styles.catBadge, { backgroundColor: category.color + '1A' }]}>
                 <Text style={[styles.catText, { color: category.color }]}>{category.label}</Text>
@@ -77,7 +79,7 @@ export default function EventCard({ event, onPress, onPinPress, onDelete, onLong
         </View>
       </Pressable>
 
-      {/* Action buttons — sibling, not nested inside the main touchable */}
+      {/* Action buttons */}
       <View style={styles.actions}>
         <Pressable
           onPress={onPinPress}
@@ -88,7 +90,7 @@ export default function EventCard({ event, onPress, onPinPress, onDelete, onLong
             <Ionicons
               name={event.pinned ? 'pin' : 'pin-outline'}
               size={22}
-              color={event.pinned ? color : '#C4C9D4'}
+              color={event.pinned ? color : colors.textPlaceholder}
             />
           </View>
         </Pressable>
@@ -108,7 +110,6 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
     borderRadius: 20,
     marginHorizontal: 16,
     marginBottom: 10,
@@ -150,7 +151,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#111827',
     marginBottom: 4,
   },
   subRow: {
@@ -159,19 +159,13 @@ const styles = StyleSheet.create({
     gap: 6,
     flexWrap: 'wrap',
   },
-  date: {
-    fontSize: 12,
-    color: '#9CA3AF',
-  },
+  date: { fontSize: 12 },
   catBadge: {
     borderRadius: 8,
     paddingHorizontal: 6,
     paddingVertical: 2,
   },
-  catText: {
-    fontSize: 10,
-    fontWeight: '600',
-  },
+  catText: { fontSize: 10, fontWeight: '600' },
   right: {
     alignItems: 'flex-end',
     minWidth: 52,

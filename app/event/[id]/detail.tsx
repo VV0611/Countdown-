@@ -12,6 +12,7 @@ import { daysFromToday, formatDisplayDate } from '../../../src/utils/dateUtils';
 import { getMilestoneInfo } from '../../../src/utils/milestoneUtils';
 import { parseBg } from '../../../src/utils/backgroundUtils';
 import ShareCard from '../../../src/components/ShareCard';
+import { useTheme } from '../../../src/theme/ThemeContext';
 
 export default function EventDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -22,6 +23,7 @@ export default function EventDetailScreen() {
   const [now, setNow] = useState(() => new Date());
   const [shareVisible, setShareVisible] = useState(false);
   const cardRef = useRef<View>(null);
+  const { colors } = useTheme();
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
@@ -197,12 +199,12 @@ export default function EventDetailScreen() {
     <>
       <Stack.Screen options={{ title: event.title }} />
 
-      <View style={styles.screen}>
+      <View style={[styles.screen, { backgroundColor: colors.background }]}>
         <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
           {heroEl}
 
           {!isToday && (
-            <View style={styles.section}>
+            <View style={[styles.section, { backgroundColor: colors.surface }]}>
               <UnitRow
                 icon="time-outline"
                 label="精确到秒"
@@ -247,8 +249,8 @@ export default function EventDetailScreen() {
           </View>
 
           {event.note ? (
-            <View style={styles.noteBox}>
-              <Text style={styles.noteText}>{event.note}</Text>
+            <View style={[styles.noteBox, { backgroundColor: colors.surface }]}>
+              <Text style={[styles.noteText, { color: colors.textSecondary }]}>{event.note}</Text>
             </View>
           ) : null}
 
@@ -256,7 +258,7 @@ export default function EventDetailScreen() {
         </ScrollView>
 
         {/* Bottom action bar */}
-        <View style={styles.bottomBar}>
+        <View style={[styles.bottomBar, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
           <TouchableOpacity style={styles.actionBtn} onPress={() => setShareVisible(true)}>
             <View style={[styles.actionIcon, { backgroundColor: event.themeColor + '18' }]}>
               <Ionicons name="share-outline" size={22} color={event.themeColor} />
@@ -333,6 +335,7 @@ function UnitRow({
 }: {
   icon: string; label: string; value: string; accent?: boolean; color?: string;
 }) {
+  const { colors } = useTheme();
   return (
     <View style={styles.unitRow}>
       <Ionicons
@@ -341,8 +344,8 @@ function UnitRow({
         color={accent && color ? color : '#9CA3AF'}
         style={styles.unitIcon}
       />
-      <Text style={styles.unitLabel}>{label}</Text>
-      <Text style={[styles.unitValue, accent && color ? { color } : null]}>
+      <Text style={[styles.unitLabel, { color: colors.textMuted }]}>{label}</Text>
+      <Text style={[styles.unitValue, { color: colors.text }, accent && color ? { color } : null]}>
         {value}
       </Text>
     </View>
@@ -350,7 +353,8 @@ function UnitRow({
 }
 
 function Divider() {
-  return <View style={styles.divider} />;
+  const { colors } = useTheme();
+  return <View style={[styles.divider, { backgroundColor: colors.divider }]} />;
 }
 
 const styles = StyleSheet.create({

@@ -1,13 +1,15 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../theme/ThemeContext';
 
 export default function EmptyState() {
+  const { colors } = useTheme();
   return (
     <View style={styles.container}>
-      <Ionicons name="calendar-outline" size={72} color="#E5E7EB" />
-      <Text style={styles.heading}>还没有活动</Text>
-      <Text style={styles.sub}>点击右上角 + 添加第一个倒数日</Text>
+      <Ionicons name="calendar-outline" size={72} color={colors.border} />
+      <Text style={[styles.heading, { color: colors.textSecondary }]}>还没有活动</Text>
+      <Text style={[styles.sub, { color: colors.textMuted }]}>点击右上角 + 添加第一个倒数日</Text>
     </View>
   );
 }
@@ -23,12 +25,10 @@ const styles = StyleSheet.create({
   heading: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#374151',
     marginTop: 8,
   },
   sub: {
     fontSize: 14,
-    color: '#9CA3AF',
     textAlign: 'center',
     lineHeight: 20,
   },

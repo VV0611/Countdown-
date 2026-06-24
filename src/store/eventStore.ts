@@ -13,6 +13,8 @@ interface EventStore {
   update: (id: string, updates: Partial<Omit<CountdownEvent, 'id' | 'createdAt'>>) => void;
   remove: (id: string) => void;
   togglePin: (id: string) => void;
+  replaceAll: (events: CountdownEvent[]) => void;
+  mergeEvents: (incoming: CountdownEvent[]) => void;
 }
 
 export const useEventStore = create<EventStore>()(
@@ -50,6 +52,15 @@ export const useEventStore = create<EventStore>()(
             e.id === id ? { ...e, pinned: !e.pinned } : e
           ),
         })),
+
+      replaceAll: (events) => set({ events }),
+
+      mergeEvents: (incoming) =>
+        set((state) => {
+          const existingIds = new Set(state.events.map((e) => e.id));
+          const toAdd = incoming.filter((e) => !existingIds.has(e.id));
+          return { events: [...state.events, ...toAdd] };
+        }),
     }),
     {
       name: 'countdown-events',

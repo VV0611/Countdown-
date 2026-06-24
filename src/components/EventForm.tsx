@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import {
 import { useRouter } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import dayjs from 'dayjs';
-import { CountdownEvent, EventType, RepeatType, REPEAT_LABELS, DEFAULT_COLOR } from '../types';
+import { CountdownEvent, EventType, RepeatType, REPEAT_LABELS, ReminderOption, REMINDER_LABELS, DEFAULT_COLOR } from '../types';
 import BackgroundPicker from './BackgroundPicker';
 import IconPicker from './IconPicker';
 import ConfirmDialog from './ConfirmDialog';
@@ -20,6 +20,8 @@ import { parseBg } from '../utils/backgroundUtils';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useCategoryStore } from '../store/categoryStore';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../theme/ThemeContext';
+import { ThemeColors } from '../theme/colors';
 
 type FormData = Omit<CountdownEvent, 'id' | 'createdAt'>;
 
@@ -29,9 +31,106 @@ interface Props {
   onDelete?: () => void;
 }
 
+function makeStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    scroll: { flex: 1, backgroundColor: colors.background },
+    container: { padding: 20, paddingBottom: 56 },
+    section: { marginTop: 28 },
+    label: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.textSecondary,
+      marginBottom: 10,
+    },
+    labelRow: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      justifyContent: 'space-between' as const,
+      marginBottom: 10,
+    },
+    manageCatBtn: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 4 },
+    manageCatText: { fontSize: 12, color: colors.textMuted },
+
+    input: {
+      backgroundColor: colors.inputBg,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: colors.border,
+      paddingHorizontal: 16,
+      paddingVertical: 15,
+      fontSize: 16,
+      color: colors.text,
+    },
+    noteInput: {
+      minHeight: 88,
+      paddingTop: 14,
+      fontSize: 15,
+    },
+    inputError: { borderColor: '#EF4444' },
+    errorText: { color: '#EF4444', fontSize: 12, marginTop: 6 },
+    dateButton: {
+      backgroundColor: colors.inputBg,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: colors.border,
+      paddingHorizontal: 16,
+      paddingVertical: 15,
+    },
+    dateButtonText: { fontSize: 16, color: colors.text },
+    segmentRow: {
+      flexDirection: 'row' as const,
+      backgroundColor: colors.segmentBg,
+      borderRadius: 14,
+      padding: 4,
+      gap: 4,
+    },
+    segment: {
+      flex: 1,
+      paddingVertical: 11,
+      borderRadius: 12,
+      alignItems: 'center' as const,
+    },
+    segmentText: { fontSize: 13, fontWeight: '600' as const, color: colors.textMuted },
+    segmentTextActive: { color: '#fff' },
+
+    catPillRow: { flexDirection: 'row' as const, gap: 8, paddingBottom: 4 },
+    catPill: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      gap: 6,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: 20,
+      backgroundColor: colors.pillBg,
+      borderWidth: 1.5,
+      borderColor: 'transparent',
+    },
+    catPillSelected: { borderColor: colors.text, backgroundColor: colors.text },
+    catPillText: { fontSize: 13, fontWeight: '600' as const, color: colors.textMuted },
+    catPillTextSelected: { color: '#fff' },
+    catPillDot: { width: 8, height: 8, borderRadius: 4 },
+
+    submitBtn: {
+      marginTop: 40,
+      borderRadius: 18,
+      paddingVertical: 17,
+      alignItems: 'center' as const,
+    },
+    submitText: { fontSize: 16, fontWeight: '700' as const, color: '#fff' },
+    deleteBtn: {
+      marginTop: 16,
+      paddingVertical: 14,
+      alignItems: 'center' as const,
+    },
+    deleteText: { fontSize: 15, color: '#EF4444', fontWeight: '600' as const },
+  });
+}
+
 export default function EventForm({ initialData, onSubmit, onDelete }: Props) {
   const router = useRouter();
   const { categories } = useCategoryStore();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   const [title, setTitle] = useState(initialData?.title ?? '');
   const [targetDate, setTargetDate] = useState<Date>(
@@ -44,6 +143,7 @@ export default function EventForm({ initialData, onSubmit, onDelete }: Props) {
   const [icon, setIcon] = useState<string | undefined>(initialData?.icon);
   const [categoryId, setCategoryId] = useState<string | undefined>(initialData?.categoryId);
   const [note, setNote] = useState<string | undefined>(initialData?.note);
+  const [reminder, setReminder] = useState<ReminderOption>(initialData?.reminder ?? 'none');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [titleError, setTitleError] = useState(false);
@@ -63,6 +163,7 @@ export default function EventForm({ initialData, onSubmit, onDelete }: Props) {
       icon,
       categoryId,
       note: note?.trim() || undefined,
+      reminder,
       isLunar: false,
       pinned: initialData?.pinned ?? false,
     });
@@ -76,7 +177,7 @@ export default function EventForm({ initialData, onSubmit, onDelete }: Props) {
         <TextInput
           style={[styles.input, titleError && styles.inputError]}
           placeholder="例：暑假旅行"
-          placeholderTextColor="#C4C9D4"
+          placeholderTextColor={colors.textPlaceholder}
           value={title}
           onChangeText={(t) => { setTitle(t); setTitleError(false); }}
           maxLength={40}
@@ -95,15 +196,15 @@ export default function EventForm({ initialData, onSubmit, onDelete }: Props) {
               if (e.target.value) setTargetDate(new Date(e.target.value + 'T00:00:00'));
             }}
             style={{
-              backgroundColor: '#fff',
+              backgroundColor: colors.inputBg,
               borderRadius: 16,
-              border: '1px solid #E5E7EB',
+              border: `1px solid ${colors.border}`,
               paddingLeft: 16,
               paddingRight: 16,
               paddingTop: 15,
               paddingBottom: 15,
               fontSize: 16,
-              color: '#111827',
+              color: colors.text,
               width: '100%',
               boxSizing: 'border-box' as const,
               outline: 'none',
@@ -151,7 +252,7 @@ export default function EventForm({ initialData, onSubmit, onDelete }: Props) {
 
       {/* Repeat */}
       <View style={styles.section}>
-        <Text style={styles.label}>重复提醒</Text>
+        <Text style={styles.label}>重复</Text>
         <View style={styles.segmentRow}>
           {(['none', 'weekly', 'monthly', 'yearly'] as RepeatType[]).map((r) => (
             <TouchableOpacity
@@ -167,12 +268,32 @@ export default function EventForm({ initialData, onSubmit, onDelete }: Props) {
         </View>
       </View>
 
+      {/* Reminder */}
+      <View style={styles.section}>
+        <Text style={styles.label}>提醒</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View style={styles.catPillRow}>
+            {(['none', '1', '3', '7', '14', '30'] as ReminderOption[]).map((opt) => (
+              <TouchableOpacity
+                key={opt}
+                style={[styles.catPill, reminder === opt && { backgroundColor: themeColor, borderColor: themeColor }]}
+                onPress={() => setReminder(opt)}
+              >
+                <Text style={[styles.catPillText, reminder === opt && styles.catPillTextSelected]}>
+                  {REMINDER_LABELS[opt]}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
+      </View>
+
       {/* Category */}
       <View style={styles.section}>
         <View style={styles.labelRow}>
           <Text style={styles.label}>分类</Text>
           <TouchableOpacity onPress={() => router.push('/settings')} style={styles.manageCatBtn}>
-            <Ionicons name="settings-outline" size={14} color="#9CA3AF" />
+            <Ionicons name="settings-outline" size={14} color={colors.textMuted} />
             <Text style={styles.manageCatText}>管理分类</Text>
           </TouchableOpacity>
         </View>
@@ -224,7 +345,7 @@ export default function EventForm({ initialData, onSubmit, onDelete }: Props) {
         <TextInput
           style={[styles.input, styles.noteInput]}
           placeholder="记录一下心情或备注…"
-          placeholderTextColor="#C4C9D4"
+          placeholderTextColor={colors.textPlaceholder}
           value={note ?? ''}
           onChangeText={setNote}
           multiline
@@ -362,97 +483,4 @@ const previewStyles = StyleSheet.create({
   title: { fontSize: 17, fontWeight: '700', marginBottom: 4 },
   sub: { fontSize: 13 },
   number: { fontSize: 40, fontWeight: '800', minWidth: 56, textAlign: 'center' },
-});
-
-const styles = StyleSheet.create({
-  scroll: { flex: 1, backgroundColor: '#F5F6FA' },
-  container: { padding: 20, paddingBottom: 56 },
-  section: { marginTop: 28 },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: 10,
-  },
-  labelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  manageCatBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  manageCatText: { fontSize: 12, color: '#9CA3AF' },
-
-  input: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    paddingHorizontal: 16,
-    paddingVertical: 15,
-    fontSize: 16,
-    color: '#111827',
-  },
-  noteInput: {
-    minHeight: 88,
-    paddingTop: 14,
-    fontSize: 15,
-  },
-  inputError: { borderColor: '#EF4444' },
-  errorText: { color: '#EF4444', fontSize: 12, marginTop: 6 },
-  dateButton: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    paddingHorizontal: 16,
-    paddingVertical: 15,
-  },
-  dateButtonText: { fontSize: 16, color: '#111827' },
-  segmentRow: {
-    flexDirection: 'row',
-    backgroundColor: '#EDEEF2',
-    borderRadius: 14,
-    padding: 4,
-    gap: 4,
-  },
-  segment: {
-    flex: 1,
-    paddingVertical: 11,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  segmentText: { fontSize: 13, fontWeight: '600', color: '#9CA3AF' },
-  segmentTextActive: { color: '#fff' },
-
-  catPillRow: { flexDirection: 'row', gap: 8, paddingBottom: 4 },
-  catPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#F3F4F6',
-    borderWidth: 1.5,
-    borderColor: 'transparent',
-  },
-  catPillSelected: { borderColor: '#111827', backgroundColor: '#111827' },
-  catPillText: { fontSize: 13, fontWeight: '600', color: '#6B7280' },
-  catPillTextSelected: { color: '#fff' },
-  catPillDot: { width: 8, height: 8, borderRadius: 4 },
-
-  submitBtn: {
-    marginTop: 40,
-    borderRadius: 18,
-    paddingVertical: 17,
-    alignItems: 'center',
-  },
-  submitText: { fontSize: 16, fontWeight: '700', color: '#fff' },
-  deleteBtn: {
-    marginTop: 16,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  deleteText: { fontSize: 15, color: '#EF4444', fontWeight: '600' },
 });

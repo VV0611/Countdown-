@@ -9,6 +9,7 @@ import { useEventStore } from '../../../src/store/eventStore';
 import { daysFromToday, formatDisplayDate } from '../../../src/utils/dateUtils';
 import { parseBg } from '../../../src/utils/backgroundUtils';
 import ShareCard from '../../../src/components/ShareCard';
+import { useTheme } from '../../../src/theme/ThemeContext';
 
 export default function EventSimpleScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -17,6 +18,7 @@ export default function EventSimpleScreen() {
   const event = events.find((e) => e.id === id);
   const [shareVisible, setShareVisible] = useState(false);
   const cardRef = useRef<View>(null);
+  const { colors } = useTheme();
 
   if (!event) {
     return (
@@ -132,7 +134,7 @@ export default function EventSimpleScreen() {
             </View>
 
             {/* White body */}
-            <View style={styles.cardBody}>
+            <View style={[styles.cardBody, { backgroundColor: colors.surface }]}>
               {isToday ? (
                 <>
                   <Text style={styles.todayEmoji}>🎉</Text>
@@ -140,7 +142,7 @@ export default function EventSimpleScreen() {
                 </>
               ) : (
                 <View style={styles.numberRow}>
-                  <Text style={styles.bigNumber}>{absDiff}</Text>
+                  <Text style={[styles.bigNumber, { color: colors.text }]}>{absDiff}</Text>
                   <Text style={[styles.bigUnit, { color }]}>天</Text>
                 </View>
               )}
@@ -152,7 +154,7 @@ export default function EventSimpleScreen() {
         </View>
 
         {/* Bottom action bar */}
-        <View style={styles.bottomBar}>
+        <View style={[styles.bottomBar, { backgroundColor: colors.surface }]}>
           <TouchableOpacity
             style={styles.actionBtn}
             onPress={() => setShareVisible(true)}
@@ -211,7 +213,7 @@ export default function EventSimpleScreen() {
         onRequestClose={() => setShareVisible(false)}
       >
         <View style={styles.modalBackdrop}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { backgroundColor: colors.modalBg }]}>
             <Text style={styles.modalTitle}>分享卡片</Text>
             <ShareCard event={event} />
             <View style={styles.modalActions}>

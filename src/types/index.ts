@@ -1,5 +1,15 @@
 export type EventType = 'countdown' | 'countup';
 export type RepeatType = 'none' | 'weekly' | 'monthly' | 'yearly';
+export type ReminderOption = 'none' | '1' | '3' | '7' | '14' | '30';
+
+export const REMINDER_LABELS: Record<ReminderOption, string> = {
+  none:  '不提醒',
+  '1':   '提前1天',
+  '3':   '提前3天',
+  '7':   '提前7天',
+  '14':  '提前14天',
+  '30':  '提前30天',
+};
 
 export const REPEAT_LABELS: Record<RepeatType, string> = {
   none:    '不重复',
@@ -21,6 +31,8 @@ export interface CountdownEvent {
   coverImage?: string;
   icon?: string;
   note?: string;
+  reminder?: ReminderOption;
+  notificationId?: string;
   createdAt: string;
 }
 
